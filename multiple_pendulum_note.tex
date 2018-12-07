@@ -1,0 +1,234 @@
+\documentclass{jsarticle}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+
+\title{多重振り子の運動方程式と数値的解法}
+\author{中山大樹}
+
+\newcommand{\eqk}[1]{\begin{gather}#1\end{gather}}
+\newcommand{\eqa}[1]{\begin{align}#1\end{align}}
+\newcommand{\so}{\Rightarrow}
+
+\newcommand{\cost}[2]{\cos\left(\theta_{#1}-\theta_{#2}\right)}
+\newcommand{\sint}[2]{\sin\left(\theta_{#1}-\theta_{#2}\right)}
+\newcommand{\dott}[1]{\dot{\theta_{#1}}}
+\newcommand{\ddott}[1]{\ddot{\theta_{#1}}}
+
+\begin{document}
+\maketitle
+
+\section{はじめに}
+
+このノートは https://www.aihara.co.jp/~taiji/pendula-equations/present-node5.html を参考にして自分のメモや計算を追加したものである。
+
+$n$が大きいときに数値計算でいい感じに振り子を動かすことを目指す。
+
+\section{$n$質点 2次元}
+
+$n$個の重りが直列に連結された多重振り子がある。
+これらは重力と逆向きを$y$軸とする$xy$平面内で回転運動するものとする。
+重力加速度を$g$とする。
+
+各重り$i$は質量$m_i$を持つ。
+重り$1$は原点$O$に固定された長さ$l_1$の糸で吊るされている。
+その他の重り$i(i=2,3,\dots,n)$は重り$i-1$に固定された長さ$l_i$の糸で吊るされている。
+
+この系のラグランジュ運動方程式を求めていく。
+
+重り$i(i=1,2,\dots,n)$の$y$軸に対する角度を$\theta_i$とする。
+重り$i$の位置$(x_i, y_i)$は
+\eqa{
+	x_i &= \sum_{j=1}^i l_j \sin\theta_j \\
+	y_i &= -\sum_{j=1}^i l_j \cos\theta_j
+}
+となる。
+$n=3$のときに具体的に書き下してみると
+\eqa{
+	\left(x_1, y_1\right) &= \left(l_1 \sin\theta_1, -l_1 \cos\theta_1\right) \notag\\
+	\left(x_2, y_2\right) &= \left(l_1 \sin\theta_1 + l_2 \sin\theta_2, -l_1 \cos\theta_1 - l_2 \cos\theta_2\right) \notag\\
+	\left(x_3, y_3\right) &= \left(
+		l_1 \sin\theta_1 + l_2 \sin\theta_2 + l_3 \sin\theta_3,
+		-l_1 \cos\theta_1 - l_2 \cos\theta_2 - l_3 \cos\theta_3
+		\right) \notag
+}
+となる。
+
+運動エネルギーを求めたいので、重り$i$の速度$v_i$の2乗($=v_i^2$)を考える。
+$v_i^2$は位置の各成分の時間微分の2乗の和なので
+\eqa{
+	v_i^2 &= \dot{x_i}^2 + \dot{y_i}^2 \notag\\
+		&= \left(\sum_{j=1}^i l_j \dott{j} \cos\theta_j\right)^2
+			+ \left(\sum_{j=1}^i l_j \dott{j} \sin\theta_j\right)^2 \notag\\
+		&= \sum_{j=1}^i l_j^2 \dott{j}^2 \left(\cos^2\theta_j + \sin^2\theta_j\right)
+			+ 2\sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k}
+				\left(\cos\theta_j\cos\theta_k + \sin\theta_j\sin\theta_k\right) \notag\\
+		&= \sum_{j=1}^i l_j^2 \dott{j}^2
+			+ 2\sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k}
+}
+となる。
+$n=3$のときに具体的に書き下してみると
+\eqa{
+	v_1^2 &= l_1^2 \dott{1}^2 \notag\\
+	v_2^2 &= l_1^2 \dott{1}^2 + l_2^2 \dott{2}^2
+		+ 2 l_1 l_2 \dott{1} \dott{2} \cos\left(\theta_1-\theta_2\right) \notag\\
+	v_3^2 &= l_1^2 \dott{1}^2 + l_2^2 \dott{2}^2 + l_3^2 \dott{3}^2 \notag\\
+		&+ 2 l_1 l_2 \dott{1} \dott{2} \cost{1}{2}
+		+ 2 l_2 l_3 \dott{2} \dott{3} \cost{2}{3}
+		+ 2 l_3 l_1 \dott{3} \dott{1} \cost{3}{1} \notag
+}
+となる。
+
+ここで、重り$i(i=1,2,\dots,n)$の運動エネルギー$T_i$および位置エネルギー$U_i$は
+\eqa{
+	T_i &= \frac{1}{2} m_i v_i^2 \notag\\
+		&= \frac{1}{2} m_i\sum_{j=1}^i l_j^2 \dott{j}^2
+			+ m_i\sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \\
+	U_i &= m_i g y_i \notag\\
+		&= -m_i g \sum_{j=1}^i l_j \cos\theta_j
+}
+となる。
+全運動エネルギー$T$および全位置エネルギー$U$は
+\eqa{
+	T &= \sum_{i=1}^n T_i \notag\\
+		&= \sum_{i=1}^n \left( \frac{1}{2} m_i\sum_{j=1}^i l_j^2 \dott{j}^2
+			+ m_i\sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \right) \notag\\
+		&= \frac{1}{2} \sum_{i=1}^n m_i \sum_{j=1}^i l_j^2 \dott{j}^2
+			+ \sum_{i=1}^n m_i \sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \notag\\
+	U &= \sum_{i=1}^n U_i \notag\\
+		&= \sum_{i=1}^n \left(-m_i g \sum_{j=1}^i l_j \cos\theta_j \right) \notag\\
+		&= - \sum_{i=1}^n m_i g \sum_{j=1}^i l_j \cos\theta_j
+}
+となる。
+$n=3$のときに具体的に書き下してみると
+\eqa{
+	T &= \frac{1}{2} \left( (m_1 + m_2 + m_3) l_1^2 \dott{1}^2 + (m_2 + m_3) l_2^2 \dott{2}^2 + m_3 l_3^2 \dott{3}^2 \right) \notag\\
+		&+ m_2 l_1 l_2 \dott{1} \dott{2} \cost{1}{2} \notag\\
+		&+ m_3 l_1 l_2 \dott{1} \dott{2} \cost{1}{2} + m_3 l_2 l_3 \dott{2} \dott{3} \cost{2}{3} + m_3 l_3 l_1 \dott{3} \dott{1} \cost{3}{1} \notag\\
+		&= \frac{1}{2} \left( (m_1 + m_2 + m_3) l_1^2 \dott{1}^2 + (m_2 + m_3) l_2^2 \dott{2}^2 + m_3 l_3^2 \dott{3}^2 \right) \notag\\
+		&+ (m_2 + m_3) l_1 l_2 \dott{1} \dott{2} \cost{1}{2} + m_3 l_1 l_3 \dott{1} \dott{3} \cost{1}{3} \notag\\
+		&+ m_3 l_2 l_3 \dott{2} \dott{3} \cost{2}{3} \notag\\
+	U &= -(m_1 + m_2 + m_3) g l_1 \cos\theta_1 - (m_2 + m_3) g l_2 \cos\theta_2 - m_3 g l_3 \cos\theta_3 \notag
+}
+となる。
+これを見ると後のことを考えて$T$を変形しておいた方が良さそうに見える。
+新たに$M_d = \sum_{i=d}^n m_i$とおいて$T$を整理すると
+\eqa{
+	T &= \frac{1}{2} \sum_{i=1}^n m_i \sum_{j=1}^i l_j^2 \dott{j}^2
+			+ \sum_{i=1}^n m_i \sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \notag\\
+		&= \frac{1}{2} \sum_{i=1}^n \left(
+			M_i l_i^2 \dott{i}^2
+			+ \sum_{j=1}^{i-1} M_i l_i l_j \dott{i} \dott{j} \cost{i}{j}
+			+ \sum_{j=i+1}^n M_j l_i l_j \dott{i} \dott{j} \cost{i}{j}
+		\right) \\
+	U &= -\sum_{i=1}^n M_i g l_i \cos\theta_i
+}
+となる。
+
+一般にラグランジュ関数$L$は$L = T - U$であり、$\theta_d(d=1,2,\dots,n)$に関するラグランジュ運動方程式は以下の関係式から求めることができる。
+\eqa{
+	\frac{d}{dt} \frac{\partial L}{\partial \dott{d}} - \frac{\partial L}{\partial \theta_d} = 0
+}
+今回の多重振り子について具体的に求めると
+\eqa{
+	\frac{\partial L}{\partial \dott{d}} &=
+		M_d l_d^2 \dott{d}
+		+ \left(\frac{1}{2}\sum_{i=1}^{d-1} M_d l_d l_i \dott{i} \cost{d}{i} + \frac{1}{2}\sum_{i=d+1}^n M_i l_d l_i \dott{i} \cost{d}{i} \right) \times 2 \notag\\
+		&= M_d l_d^2 \dott{d} + \sum_{i=1}^{d-1} M_d l_d l_i \dott{i} \cost{d}{i} +\sum_{i=d+1}^n M_i l_d l_i \dott{i} \cost{d}{i} \\
+	\so \frac{d}{dt} \frac{\partial L}{\partial \dott{d}} &=
+		M_d l_d^2 \ddott{d} \notag\\
+		&+ \sum_{i=1}^{d-1} M_d l_d l_i \ddott{i} \cost{d}{i}
+			- \sum_{i=1}^{d-1} M_d l_d l_i \dott{i} \left( \dott{d} - \dott{i} \right) \sint{d}{i} \notag\\
+		&+ \sum_{i=d+1}^n M_i l_d l_i \ddott{i} \cost{d}{i}
+			- \sum_{i=d+1}^n M_i l_d l_i \dott{i} \left( \dott{d} - \dott{i} \right) \sint{d}{i} \notag\\
+	- \frac{\partial L}{\partial \theta_d} &=
+		\sum_{i=1}^{d-1} M_d l_d l_i \dott{d} \dott{i} \sint{d}{i} + \sum_{i=d+1}^n M_i l_d l_i \dott{i} \cost{d}{i} \notag\\
+		&+ M_d g l_d \sin\theta_d
+}
+となる。
+ゆえに、$\theta_d(d=1,2,\dots,n)$に関するラグランジュ運動方程式は
+\eqa{
+	0 &= M_d l_d^2 \ddott{d} \notag\\
+		&+ \sum_{i=1}^{d-1} M_d l_d l_i \ddott{i} \cost{d}{i}
+			+ \sum_{i=1}^{d-1} M_d l_d l_i \dott{i}^2 \sint{d}{i} \notag\\
+		&+ \sum_{i=d+1}^n M_i l_d l_i \ddott{i} \cost{d}{i}
+			+ \sum_{i=d+1}^n M_i l_d l_i \dott{i}^2 \sint{d}{i} \notag\\
+		&+ M_d g l_d \sin\theta_d
+}
+となる。
+
+$n=3$について具体的に書き下すと
+\eqa{
+	\begin{cases}
+		0 &= M_1 l_1^2 \ddott{1} + M_1 g l_1 \sin\theta_1 \\
+			&+ M_2 l_1 l_2 \ddott{2} \cost{1}{2} + M_3 l_1 l_3 \ddott{3} \cost{1}{3} \\
+			&+ M_2 l_1 l_2 \dott{2}^2 \sint{1}{2} + M_3 l_1 l_3 \dott{3}^2 \sint{1}{3} \\
+		0 &= M_2 l_2^2 \ddott{2}  + M_2 g l_2 \sin\theta_2 \\
+			&+ M_2 l_2 l_1 \ddott{1} \cost{2}{1} + M_2 l_2 l_1 \dott{1}^2 \sint{2}{1} \\
+			&+ M_3 l_2 l_3 \ddott{3} \cost{2}{3} + M_3 l_2 l_3 \dott{3}^2 \sint{2}{3} \\
+		0 &= M_3 l_3^2 \ddott{3}  + M_3 g l_3 \sin\theta_3 \\
+			&+ M_3 l_3 l_1 \ddott{1} \cost{3}{1} + M_3 l_3 l_2 \ddott{2} \cost{3}{2} \\
+			&+ M_3 l_3 l_1 \dott{1}^2 \sint{3}{1} + M_3 l_3 l_2 \dott{2}^2 \sint{3}{2}
+	\end{cases}
+}
+となる。
+
+数値計算がしやすいように上記のラグランジュ運動方程式を$\bm{\ddot{\theta}}, \bm{\dot{\theta}^2}, \bm{h} \in \mathbb{R}^n, C, S \in \mathbb{R}^{n\times n}$を使って書き直すと
+\eqa{
+	C \bm{\ddot{\theta}} = S \bm{\dot{\theta}^2} - \bm{h}
+}
+となる。ただし
+\eqa{
+	\bm{\ddot{\theta}} &= {}^t(\ddott{1}, \ddott{2}, \dots, \ddott{n}) \\
+	\bm{\dot{\theta}^2} &= {}^t(\dott{1}^2, \dott{2}^2, \dots. \dott{n}^2) \\
+	\bm{h} &= {}^t(M_1 g l_1 \sin\theta_1, M_2 g l_2 \sin\theta_2, \dots, M_n g l_n \sin\theta_n) \\
+	C_{i,j} &= M_{\max(i, j)} l_i l_j \cost{i}{j} \\
+	S_{i,j} &= \begin{cases}
+		M_i l_i l_j \sint{i}{j} & \text{$i \ge j$}\\
+		M_j l_j l_i \sint{j}{i} & \text{$i < j$}
+	\end{cases}
+}
+である。
+ただし $\cost{d}{d} = 1$, $\sint{d}{d} = 0$ に注意。
+また$R_{i,j}$において$j\rightarrow j+1$とすると行列$R$の要素を1つ右に進むことに対応する（これいつまで経っても覚えられない）。
+
+$n=3$のときに（対称性を意識しつつ）具体的に書き下して見ると
+\eqa{
+	\begin{bmatrix}
+		M_1 l_1^2 & M_2 l_1 l_2 \cost{2}{1} & M_3 l_1 l_3 \cost{3}{1} \\
+		M_2 l_2 l_1 \cost{1}{2} & M_2 l_2^2 & M_3 l_2 l_3 \cost{3}{2} \\
+		M_3 l_3 l_1 \cost{1}{3} & M_3 l_3 l_2 \cost{2}{3} & M_3 l_3^2
+	\end{bmatrix}
+	\begin{bmatrix}
+		\ddott{1} \\ \ddott{2} \\ \ddott{3}
+	\end{bmatrix} \notag\\
+	=
+	\begin{bmatrix}
+		0 & M_2 l_1 l_2 \sint{2}{1} & M_3 l_1 l_3 \sint{3}{1} \\
+		M_2 l_2 l_1 \cost{1}{2} & 0 & M_3 l_2 l_3 \cost{3}{2} \\
+		M_3 l_3 l_1 \cost{1}{3} & M_3 l_3 l_2 \cost{2}{3} & 0
+	\end{bmatrix}
+	\begin{bmatrix}
+		\dott{1}^2 \\ \dott{2}^2 \\ \dott{3}^2
+	\end{bmatrix}
+	-
+	\begin{bmatrix}
+		M_1 g l_1 \sin\theta_1 \\ M_2 g l_2 \sin\theta_2 \\ M_3 g l_3 \sin\theta_3
+	\end{bmatrix}
+}
+となる。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
