@@ -7,3 +7,11 @@
 *.aux
 *.log
 *.synctex.gz
+
+# Rust
+target/
+Cargo.lock
+
+# jet brains
+.idea
+*.iml
