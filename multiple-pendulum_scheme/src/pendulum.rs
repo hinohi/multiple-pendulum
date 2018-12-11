@@ -1,3 +1,6 @@
+use std::f64::consts::PI;
+use std::io;
+
 use ndarray::prelude::*;
 use ndarray_linalg::{error::LinalgError, SolveH};
 
@@ -6,6 +9,7 @@ type Float = f64;
 pub struct MultiUniformPendulum2D {
     n: usize,
     g: Float,
+    pub t: Float,
     x: Array1<Float>,
     v: Array1<Float>,
 }
@@ -15,13 +19,26 @@ impl MultiUniformPendulum2D {
         MultiUniformPendulum2D {
             n,
             g,
+            t: 0.0,
             x: Array1::from_vec(vec![2.0; n]),
             v: Array1::from_vec(vec![0.0; n]),
         }
     }
 
-    pub fn get_pos(&self) -> ArrayView1<Float> {
-        self.x.view()
+    pub fn dump_quantities<W: io::Write>(&self, w: &mut W) -> io::Result<()> {
+        writeln!(
+            w,
+            "{} {} {} {}",
+            self.t,
+            self.position_energy(),
+            self.physical_energy(),
+            self.x
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<String>>()
+                .join(" "),
+        )?;
+        Ok(())
     }
 
     pub fn position_energy(&self) -> Float {
@@ -84,14 +101,30 @@ impl MultiUniformPendulum2D {
         a.solveh_into(force)
     }
 
-    pub fn tick_rk11(&mut self, dt: Float) -> Result<(), LinalgError> {
+    fn x_mod_pi(&mut self) {
+        self.x
+            .iter_mut()
+            .map(|x| {
+                if x.is_sign_negative() {
+                    *x += PI as Float;
+                } else if *x > PI as Float {
+                    *x -= PI as Float;
+                }
+            })
+            .last()
+            .unwrap();
+    }
+
+    pub fn update_euler(&mut self, dt: Float) -> Result<(), LinalgError> {
         let f = self.calc_force(&self.x, &self.v)?;
         self.x.zip_mut_with(&self.v, |x, v| *x += v * dt);
         self.v.zip_mut_with(&f, |v, f| *v += f * dt);
+        self.t += dt;
+        self.x_mod_pi();
         Ok(())
     }
 
-    pub fn tick_rk44(&mut self, dt: Float) -> Result<(), LinalgError> {
+    pub fn update_rk44(&mut self, dt: Float) -> Result<(), LinalgError> {
         let f1 = self.calc_force(&self.x, &self.v)?;
 
         let mut x1 = self.x.clone();
@@ -120,6 +153,8 @@ impl MultiUniformPendulum2D {
         self.v.zip_mut_with(&f2, |v, f| *v += f * dt / 3.0);
         self.v.zip_mut_with(&f3, |v, f| *v += f * dt / 3.0);
         self.v.zip_mut_with(&f4, |v, f| *v += f * dt / 6.0);
+        self.t += dt;
+        self.x_mod_pi();
         Ok(())
     }
 }
