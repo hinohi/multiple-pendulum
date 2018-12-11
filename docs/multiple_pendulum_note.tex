@@ -1,6 +1,7 @@
 \documentclass{jsarticle}
 \usepackage{amsmath,amssymb}
 \usepackage{bm}
+\usepackage{url}
 
 \title{多重振り子の運動方程式と数値的解法}
 \author{中山大樹}
@@ -19,11 +20,14 @@
 
 \section{はじめに}
 
-このノートは https://www.aihara.co.jp/~taiji/pendula-equations/present-node5.html を参考にして自分のメモや計算を追加したものである。
+$n$個の振り子が直列に繋がった系について、運動方程式やハミルトニアンを導出し、$n$が大きいときに数値計算でいい感じに振り子を動かすことを目指す。
 
-$n$が大きいときに数値計算でいい感じに振り子を動かすことを目指す。
+ハミルトニアンやラグランジュ運動方程式の導出は\cite{カオス人形のしくみ}を大いに参考にした。
+数値計算の具体的な手法については\cite{システム数理IV}を参考にした。
 
 \section{$n$質点 2次元}
+
+\subsection{ハミルトニアン、ラグランジアン、運動方程式の導出}
 
 $n$個の重りが直列に連結された多重振り子がある。
 これらは重力と逆向きを$y$軸とする$xy$平面内で回転運動するものとする。
@@ -110,8 +114,12 @@ $n=3$のときに具体的に書き下してみると
 	U &= -(m_1 + m_2 + m_3) g l_1 \cos\theta_1 - (m_2 + m_3) g l_2 \cos\theta_2 - m_3 g l_3 \cos\theta_3 \notag
 }
 となる。
-これを見ると後のことを考えて$T$を変形しておいた方が良さそうに見える。
-新たに$M_d = \sum_{i=d}^n m_i$とおいて$T$を整理すると
+これを見ると後のことを考えて$TU,$を変形しておいた方が良さそうに見える。
+新たに
+\eqa{
+	M_d = \sum_{i=d}^n m_i
+}
+とおいて$T,U$を整理すると
 \eqa{
 	T &= \frac{1}{2} \sum_{i=1}^n m_i \sum_{j=1}^i l_j^2 \dott{j}^2
 			+ \sum_{i=1}^n m_i \sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \notag\\
@@ -123,6 +131,8 @@ $n=3$のときに具体的に書き下してみると
 	U &= -\sum_{i=1}^n M_i g l_i \cos\theta_i
 }
 となる。
+ハミルトニアン$H$は$H=T+U$で求まる。
+ここではハミルトニアンについてこれ以上書き下さない。
 
 一般にラグランジュ関数$L$は$L = T - U$であり、$\theta_d(d=1,2,\dots,n)$に関するラグランジュ運動方程式は以下の関係式から求めることができる。
 \eqa{
@@ -220,15 +230,7 @@ $n=3$のときに（対称性を意識しつつ）具体的に書き下して見
 
 
 
-
-
-
-
-
-
-
-
-
-
+\bibliography{cite}
+\bibliographystyle{junsrt}
 
 \end{document}
