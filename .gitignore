@@ -17,3 +17,12 @@ Cargo.lock
 # jet brains
 .idea
 *.iml
+
+# Python
+*.py[co]
+__pycache__
+.python-version
+.ipynb_checkpoints
+
+# Mac
+.DS_Store
