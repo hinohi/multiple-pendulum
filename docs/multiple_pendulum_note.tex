@@ -9,8 +9,12 @@
 \newcommand{\eqk}[1]{\begin{gather}#1\end{gather}}
 \newcommand{\eqa}[1]{\begin{align}#1\end{align}}
 \newcommand{\so}{\Rightarrow}
+\newcommand{\fn}[1]{\!\left(#1\right)}
+
+\newcommand{\refeq}[1]{式(\ref{#1})}
 
 \newcommand{\cost}[2]{\cos\left(\theta_{#1}-\theta_{#2}\right)}
+\newcommand{\coste}[3]{\cos^{#3}\left(\theta_{#1}-\theta_{#2}\right)}
 \newcommand{\sint}[2]{\sin\left(\theta_{#1}-\theta_{#2}\right)}
 \newcommand{\dott}[1]{\dot{\theta_{#1}}}
 \newcommand{\ddott}[1]{\ddot{\theta_{#1}}}
@@ -23,11 +27,11 @@
 $n$個の振り子が直列に繋がった系について、運動方程式やハミルトニアンを導出し、$n$が大きいときに数値計算でいい感じに振り子を動かすことを目指す。
 
 ハミルトニアンやラグランジュ運動方程式の導出は\cite{カオス人形のしくみ}を大いに参考にした。
-数値計算の具体的な手法については\cite{システム数理IV}を参考にした。
-
-\section{$n$質点 2次元}
+数値計算の具体的な手法については\cite{システム数理IV},\cite{陰的RUNGE-KUTTA法}を参考にした。
 
 \subsection{ハミルトニアン、ラグランジアン、運動方程式の導出}
+
+\section{$n$質点 2次元}
 
 $n$個の重りが直列に連結された多重振り子がある。
 これらは重力と逆向きを$y$軸とする$xy$平面内で回転運動するものとする。
@@ -114,7 +118,7 @@ $n=3$のときに具体的に書き下してみると
 	U &= -(m_1 + m_2 + m_3) g l_1 \cos\theta_1 - (m_2 + m_3) g l_2 \cos\theta_2 - m_3 g l_3 \cos\theta_3 \notag
 }
 となる。
-これを見ると後のことを考えて$TU,$を変形しておいた方が良さそうに見える。
+これを見ると後のことを考えて$T,U$を変形しておいた方が良さそうに見える。
 新たに
 \eqa{
 	M_d = \sum_{i=d}^n m_i
@@ -163,6 +167,7 @@ $n=3$のときに具体的に書き下してみると
 		&+ \sum_{i=d+1}^n M_i l_d l_i \ddott{i} \cost{d}{i}
 			+ \sum_{i=d+1}^n M_i l_d l_i \dott{i}^2 \sint{d}{i} \notag\\
 		&+ M_d g l_d \sin\theta_d
+		\label{2Dラグランジュ運動方程式}
 }
 となる。
 
@@ -227,7 +232,118 @@ $n=3$のときに（対称性を意識しつつ）具体的に書き下して見
 }
 となる。
 
+また、各角速度に比例する抵抗などの減衰や強制振動のような外力がある場合は、
+\refeq{2Dラグランジュ運動方程式}より
+\eqa{
+	&M_d l_d^2 \ddott{d} \notag\\
+		&+ \sum_{i=1}^{d-1} M_d l_d l_i \ddott{i} \cost{d}{i}
+			+ \sum_{i=1}^{d-1} M_d l_d l_i \dott{i}^2 \sint{d}{i} \notag\\
+		&+ \sum_{i=d+1}^n M_i l_d l_i \ddott{i} \cost{d}{i}
+			+ \sum_{i=d+1}^n M_i l_d l_i \dott{i}^2 \sint{d}{i} \notag\\
+		&+ M_d g l_d \sin\theta_d \notag\\
+	&= f_d
+}
+となる。
+$f_d$の具体形は特に決まってはいないが、典型的にありがちな力として、
+角速度に比例する抵抗$\lambda_d \dott{d}$と外力$\sigma_d$がある場合は
+\eqa{
+	f_d = \sigma_d - \lambda_d \dott{d}
+}
+となる。
 
+\section{数値計算}
+
+\subsection{無次元化}
+
+基本的には$g$に押し付ける。
+
+\subsection{陽解法}
+
+やる
+
+\subsection{陰解法}
+
+\subsubsection{質点2重振り子}
+
+$l = l_2 / l_1$、$m = m_2 / (m_1 + m_2)$、$g \rightarrow g / l_1 / (m_1 + m_2)$として無次元化する。
+（$g[s^{-2}]$の無次元化が不十分だが、時間の次元は適当に取ってくればいいだろう）
+\eqa{
+	\begin{bmatrix}
+		1 & m l \cost{2}{1} \\
+		m l \cost{1}{2} & m l^2
+	\end{bmatrix}
+	\begin{bmatrix}
+		\ddott{1} \\ \ddott{2}
+	\end{bmatrix}
+	&=
+	\begin{bmatrix}
+		0 & m l \sint{2}{1} \\
+		m l \sint{1}{2} & 0
+	\end{bmatrix}
+	\begin{bmatrix}
+		\dott{1}^2 \\ \dott{2}^2
+	\end{bmatrix}
+	-
+	\begin{bmatrix}
+		g \sin\theta_1 \\ m g l \sin\theta_2
+	\end{bmatrix} \notag\\
+	&=
+	\begin{bmatrix}
+		m l \dott{2}^2 \sint{2}{1} - g \sin\theta_1 \\
+		m l \dott{1}^2 \sint{1}{2} - m g l \sin\theta_2
+	\end{bmatrix} \notag
+}
+\eqa{
+	\so
+	\begin{bmatrix}
+		\ddott{1} \\ \ddott{2}
+	\end{bmatrix}
+	&=
+	\frac{1}{m l^2 - m^2 l^2 \coste{2}{1}{2}}
+	\begin{bmatrix}
+		m l^2 & -m l \cost{2}{1} \\
+		-m l \cost{1}{2} & 1
+	\end{bmatrix}
+	\begin{bmatrix}
+		m l \dott{2}^2 \sint{2}{1} - g \sin\theta_1 \\
+		m l \dott{1}^2 \sint{1}{2} - m g l \sin\theta_2
+	\end{bmatrix}
+}
+\eqa{
+	\so
+	\begin{cases}
+		\ddott{1} &= \frac{m l \dott{2}^2 \sint{2}{1} - g \sin\theta_1 - m \cost{2}{1}\left(\dott{1}^2 \sint{1}{2} - g \sin\theta_2\right)}{1 - m \coste{2}{1}{2}} \\
+		\ddott{2} &= \frac{\dott{1}^2 \sint{1}{2} - g \sin\theta_1 - \cost{1}{2}\left(m l \dott{2}^2 \sint{2}{1} - g \sin\theta_1\right)}{l - m l \coste{2}{1}{2}}
+	\end{cases}
+}
+これを$\vec{x}={}^t\left(\theta_1, \theta_2, \dott{1}, \dott{2}\right)$に対する微分方程式
+\eqa{
+	\frac{\mathrm{d}\vec{x}}{\mathrm{d}t} &= f\fn{\vec{x}} \\
+	f\fn{\vec{x}} &= \begin{bmatrix}
+		\dott{1} \\ \dott{2} \\ \ddott{1} \\ \dott{2}
+	\end{bmatrix}
+	= \begin{bmatrix}
+		\dott{1} \\ \dott{2} \\
+		\frac{m l \dott{2}^2 \sint{2}{1} - g \sin\theta_1 - m \cost{2}{1}\left(\dott{1}^2 \sint{1}{2} - g \sin\theta_2\right)}{1 - m \coste{2}{1}{2}} \\
+		\frac{\dott{1}^2 \sint{1}{2} - g \sin\theta_1 - \cost{1}{2}\left(m l \dott{2}^2 \sint{2}{1} - g \sin\theta_1\right)}{l - m l \coste{2}{1}{2}}
+	\end{bmatrix}
+}
+と解釈する。
+これに対してGauss-Legendre求積法に基づくRunge-Kutta法を適用して数値解を求める。
+
+時間を$t$から$t+h$まで進める。
+2段4次の場合は
+\eqa{
+	\vec{k}_1 &= f\fn{\vec{x}\fn{t} + h a_{11} \vec{k}_1 + h a_{12} \vec{k}_2} \\
+	\vec{k}_2 &= f\fn{\vec{x}\fn{t} + h a_{21} \vec{k}_1+ h a_{22} \vec{k}_2} \\
+	\vec{x}\fn{t + h} &= \vec{x}\fn{t} + h \frac{\vec{k}_1 + \vec{k}_2}{2} \\
+	a_{11} &= 1 / 4 \\
+	a_{12} &= 1 / 4 - \sqrt{3} / 6 \\
+	a_{21} &= 1 / 4 + \sqrt{3} / 6 \\
+	a_{22} &= 1 / 4
+}
+を用いる。
+$k_1, k_2$はニュートン法で求める。
 
 
 \bibliography{cite}
