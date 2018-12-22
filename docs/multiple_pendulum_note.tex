@@ -10,14 +10,24 @@
 \newcommand{\eqa}[1]{\begin{align}#1\end{align}}
 \newcommand{\so}{\Rightarrow}
 \newcommand{\fn}[1]{\!\left(#1\right)}
+\newcommand{\bmat}[1]{\begin{bmatrix}#1\end{bmatrix}}
+\newcommand{\paren}[1]{\left(#1\right)}
 
 \newcommand{\refeq}[1]{式(\ref{#1})}
 
 \newcommand{\cost}[2]{\cos\left(\theta_{#1}-\theta_{#2}\right)}
+\newcommand{\ccost}[2]{\cos\theta_{#1} \cos\theta_{#2}}
+\newcommand{\ssint}[2]{\sin\theta_{#1} \sin\theta_{#2}}
+\newcommand{\cosp}[2]{\cos\left(\phi_{#1}-\phi_{#2}\right)}
+
 \newcommand{\coste}[3]{\cos^{#3}\left(\theta_{#1}-\theta_{#2}\right)}
 \newcommand{\sint}[2]{\sin\left(\theta_{#1}-\theta_{#2}\right)}
-\newcommand{\dott}[1]{\dot{\theta_{#1}}}
-\newcommand{\ddott}[1]{\ddot{\theta_{#1}}}
+\newcommand{\sinp}[2]{\sin\left(\phi_{#1}-\phi_{#2}\right)}
+
+\newcommand{\dott}[1]{\dot{\theta}_{#1}}
+\newcommand{\dotp}[1]{\dot{\phi}_{#1}}
+\newcommand{\ddott}[1]{\ddot{\theta}_{#1}}
+\newcommand{\ddotp}[1]{\ddot{\phi}_{#1}}
 
 \begin{document}
 \maketitle
@@ -29,9 +39,9 @@ $n$個の振り子が直列に繋がった系について、運動方程式や�
 ハミルトニアンやラグランジュ運動方程式の導出は\cite{カオス人形のしくみ}を大いに参考にした。
 数値計算の具体的な手法については\cite{システム数理IV},\cite{陰的RUNGE-KUTTA法}を参考にした。
 
-\subsection{ハミルトニアン、ラグランジアン、運動方程式の導出}
+\section{ハミルトニアン、ラグランジアン、運動方程式の導出}
 
-\section{$n$質点 2次元}
+\subsection{$n$質点 2次元}
 
 $n$個の重りが直列に連結された多重振り子がある。
 これらは重力と逆向きを$y$軸とする$xy$平面内で回転運動するものとする。
@@ -250,6 +260,86 @@ $f_d$の具体形は特に決まってはいないが、典型的にありがち
 	f_d = \sigma_d - \lambda_d \dott{d}
 }
 となる。
+
+
+\subsection{$n$質点 3次元}
+
+$n$個の重りが直列に連結された多重振り子がある。
+これらは重力と逆向きを$z$軸、とする$xyz$空間内で回転運動するものとする。
+系は右手系にとる。
+重力加速度を$g$とする。
+
+各重り$i$は質量$m_i$を持つ。
+重り$1$は原点$O$に固定された長さ$l_1$の糸で吊るされている。
+その他の重り$i(i=2,3,\dots,n)$は重り$i-1$に固定された長さ$l_i$の糸で吊るされている。
+
+この系のラグランジュ運動方程式を求めていく。
+
+重り$i(i=1,2,\dots,n)$の$z$軸に対する角度を$\theta_i$、$x$軸に対する角度を$\phi_i$とする。
+重り$i$の位置$(x_i, y_i, z_i)$は
+\eqa{
+	x_i &= \sum_{j=1}^i l_j \sin\theta_j \cos\phi_j \\
+	y_i &= \sum_{j=1}^i l_j \sin\theta_j \sin\phi_j \\
+	z_i &= -\sum_{j=1}^i l_j \cos\theta_j
+}
+となる。
+重り$i$の速度$v_i$の2乗($=v_i^2$)は
+\eqa{
+	v_i^2 &= \dot{x_i}^2 + \dot{y_i}^2 + \dot{z_i}^2 \notag\\
+		&= \left(\sum_{j=1}^i \left( l_j \dott{j} \cos\theta_j \cos\phi_j - l_j \dotp{j} \sin\theta_j \sin\phi_j \right) \right)^2 \notag\\
+		&+ \left(\sum_{j=1}^i \left( l_j \dott{j} \cos\theta_j \sin\phi_j + l_j \dotp{j} \sin\theta_j \cos\phi_j \right) \right)^2 \notag\\
+		&+ \left(\sum_{j=1}^i l_j \dott{j} \sin\theta_j \right)^2 \notag
+}
+となるが、この先を人力で計算するのは無謀なのでプログラムで計算する。
+Pythonの記号計算ライブラリとして有名なsympyを用いて計算した。
+
+運動方程式は以下の形になる。
+\eqa{
+	\bmat{A11 & A12  \\ A21 & A22} \bmat{\bm{\ddot{\theta}} \\ \bm{\ddot{\phi}}} 
+		= \bmat{B11 & B12 \\ B21 & B22} \bmat{\bm{\dot{\theta}^2} \\ \bm{\dot{\phi}^2}}
+			- \bmat{C1 \\ C2} \bmat{\bm{\dot{\theta} \dot{\phi}}} - \bmat{\bm{g} \\ \bm{0}}
+}
+各成分は以下のようになる。
+\eqa{
+	A11_{ij} &= l_i l_j M_{\max\paren{i, j}} \paren{ \cosp{i}{j} \ccost{i}{j} + \ssint{i}{j}} \\
+	A12_{ij} &= l_i l_j M_{\max\paren{i, j}} \sinp{i}{j} \cos{\theta_i} \sin{\theta_j} \\
+	A21_{ij} &= -l_i l_j M_{\max\paren{i, j}} \sinp{i}{j} \sin{\theta_i} \cos{\theta_j} \\
+	A22_{ij} &= l_i l_j M_{\max\paren{i, j}} \cosp{i}{j} \ssint{i}{j}
+}
+\eqa{
+	B11_{ij} &= l_i l_j M_{\max\paren{i, j}} \paren{ \cosp{i}{j} \cos{\theta_i} \sin{\theta_j} - \sin{\theta_i} \cos{\theta_j}} \\
+	B12_{ij} &= l_i l_j M_{\max\paren{i, j}} \cosp{i}{j} \cos{\theta_i} \sin{\theta_j} \\
+	B21_{ij} = B22_{ij} &= -l_i l_j M_{\max\paren{i, j}} \sinp{i}{j} \ssint{i}{j}
+}
+\eqa{
+	C1_{ij} &= l_i l_j M_{\max\paren{i, j}} \sinp{i}{j} \ccost{i}{j} \\
+	C2_{ij} &= l_i l_j M_{\max\paren{i, j}} \cosp{i}{j} \sin{\theta_i} \cos{\theta_j}
+}
+\eqa{
+	\bm{g}_i = l_i g M_i \sin{\theta_i}
+}
+ただし
+\eqa{
+	\bm{\dot{\theta} \dot{\phi}} = \bmat{\dott{1} \dotp{1} \\ \dott{2} \dotp{2} \\ \vdots \\ \dott{N} \dotp{N}}
+}
+には注意。
+
+$N=1$の場合に具体的に書き下してみると
+\eqa{
+	\bmat{l_1^2 M_1 & 0 \\ 0 & l_1^2 M_1 \sin^2\theta_1} \bmat{\ddott{1} \\ \ddotp{2}} =
+	\bmat{0 & l_1^2 M_1 \cos\theta_1 \sin\theta_1 \\  0 & 0} \bmat{\dot{\theta_1}^2 \\ \dot{\phi_1}^2}
+	- \bmat{0 \\ l_1^2 M_1 \dot{\theta_1} \dot{\phi_1} \sin\theta_1\cos\theta_1}
+	- \bmat{l_1 g M_1 \sin\theta_1 \\ 0}
+}
+\eqa{
+	\so
+	\begin{cases}
+		\ddott{1} = \dot{\phi_1}^2 \cos\theta_1 \sin\theta_1- \frac{g}{l_1} \sin\theta_1 \\
+		\ddotp{1} = \dot{\theta_1} \dot{\phi_1} \cot{\theta_1}
+	\end{cases}
+}
+となる。ただし$\cot x = 1 / \tan x$。
+$\dot{\phi_1}=0$では普通に2次元系の振り子になり、$\theta_1=0$だと$\phi_1$は不定になる様子も表されている。
 
 \section{数値計算}
 
