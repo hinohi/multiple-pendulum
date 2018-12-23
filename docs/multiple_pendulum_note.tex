@@ -3,9 +3,6 @@
 \usepackage{bm}
 \usepackage{url}
 
-\title{多重振り子の運動方程式と数値的解法}
-\author{中山大樹}
-
 \newcommand{\eqk}[1]{\begin{gather}#1\end{gather}}
 \newcommand{\eqa}[1]{\begin{align}#1\end{align}}
 \newcommand{\so}{\Rightarrow}
@@ -29,10 +26,42 @@
 \newcommand{\ddott}[1]{\ddot{\theta}_{#1}}
 \newcommand{\ddotp}[1]{\ddot{\phi}_{#1}}
 
+\title{鎖を振り回したい}
+\author{中山大樹}
+
 \begin{document}
 \maketitle
 
-\section{はじめに}
+\part{はじめに}
+
+鎖を重力下でぐるぐる回すとある安定な形状をとる。
+回し方によって上端のみが節、2箇所が節、3箇所が節、とバリエーションが見られる。
+
+私は中学時代にはこの現象が面白いなーと思って、家にある鎖(空気抵抗の関係(?)で線密度が大きい紐=金属鎖がやりやすい)を回してその形状を観察していた。
+
+大学2回生になり、プログラミングを勉強したタイミングで「鎖を振り回すやつを数値シミュレーションしたい」と思うのは極めて自然だった。
+当時はHSPでシミュレーションを書いた。まだwindows機で開発していた時期だったし、可視化の簡単さを思うとHSPはなかなかいいチョイスだったと思う。
+まだ解析力学をやっていない時期なので複雑な剛体の系だと歯が立たず、$N$質点をバネで連結した系をシミュレーションした。
+しかし、バネと鎖は明らかに見た目が違い、おそらくバネ定数を大きくして行けば望む挙動をするのだろうとは思われたが、それはそのまま数値シミュレーションを困難にすることを示している。
+当時のHSPで書いたコードでは必要な計算性能が得られず、当時はそこで断念した。
+
+大学4回生の頃になり、解析力学も履修しPythonという武器も手に入れた私はラグランジアンを記号的に自動計算するプログラムをPythonで書いた。
+これは一定の成功は収め、低速ながらも$N$が比較的大きい場合でも巨大なラグランジュ運動方程式を顕に書き下し、例えば5連振り子の3次元的な動きを可視化することができていた。
+しかし、やはり計算速度は低速だったし、当時の私は「どうやって振り回すを表現するんだろうなー」のあたりで止まっていた。
+現実の系を思うと振り子の上端の位置を強制的に変更しなければならないという気分でいて、そんな形の外力をどう入れるべきかがあまりわかっていなかった。
+
+マスターの1回生になり、紐を重力下で回転させたときに安定になったとしたらその形は簡単に計算できるなと気づいた。
+これは実際簡単に定式化できた。実際の安定解を得る部分は数値計算に頼らなければならなかったがこれはかなり面白い結果が出たと思う。
+同じ時期の春の物理学会で全く同じことを発表した人がいたが、あの発表ではかなり近似して計算していて、最終的な結論が私と真逆だった。
+とにかくどういう計算をしたのかは後でまとめる。
+
+こうして、連続紐の場合に安定な状態になった後の形だけなら理解することができた。
+しかし、結局ダイナミクスがわかっていないので、例えば静止している紐をぐるぐるしたときに節が何個になるかみたいなことはできてない(これはいつまでも無理そう)。
+ダイナミクスを見ようと思ったときに紐のまま扱ってもいいんだが、当初の試みである$N$重振り子で$N$が十分に大きい(100位を思っている)ときならそれは紐だろう鎖だろうという気持ちを大事にすることにした。
+
+なので多重振り子なのである。
+
+\part{多重振り子の運動方程式と数値的解法}
 
 $n$個の振り子が直列に繋がった系について、運動方程式やハミルトニアンを導出し、$n$が大きいときに数値計算でいい感じに振り子を動かすことを目指す。
 
@@ -111,7 +140,7 @@ $n=3$のときに具体的に書き下してみると
 		&= \sum_{i=1}^n \left( \frac{1}{2} m_i\sum_{j=1}^i l_j^2 \dott{j}^2
 			+ m_i\sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \right) \notag\\
 		&= \frac{1}{2} \sum_{i=1}^n m_i \sum_{j=1}^i l_j^2 \dott{j}^2
-			+ \sum_{i=1}^n m_i \sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \notag\\
+			+ \sum_{i=1}^n m_i \sum_{j=1}^{i-1} \sum_{k=j+1}^i l_j l_k \dott{j} \dott{k} \cost{j}{k} \\
 	U &= \sum_{i=1}^n U_i \notag\\
 		&= \sum_{i=1}^n \left(-m_i g \sum_{j=1}^i l_j \cos\theta_j \right) \notag\\
 		&= - \sum_{i=1}^n m_i g \sum_{j=1}^i l_j \cos\theta_j
@@ -124,8 +153,8 @@ $n=3$のときに具体的に書き下してみると
 		&+ m_3 l_1 l_2 \dott{1} \dott{2} \cost{1}{2} + m_3 l_2 l_3 \dott{2} \dott{3} \cost{2}{3} + m_3 l_3 l_1 \dott{3} \dott{1} \cost{3}{1} \notag\\
 		&= \frac{1}{2} \left( (m_1 + m_2 + m_3) l_1^2 \dott{1}^2 + (m_2 + m_3) l_2^2 \dott{2}^2 + m_3 l_3^2 \dott{3}^2 \right) \notag\\
 		&+ (m_2 + m_3) l_1 l_2 \dott{1} \dott{2} \cost{1}{2} + m_3 l_1 l_3 \dott{1} \dott{3} \cost{1}{3} \notag\\
-		&+ m_3 l_2 l_3 \dott{2} \dott{3} \cost{2}{3} \notag\\
-	U &= -(m_1 + m_2 + m_3) g l_1 \cos\theta_1 - (m_2 + m_3) g l_2 \cos\theta_2 - m_3 g l_3 \cos\theta_3 \notag
+		&+ m_3 l_2 l_3 \dott{2} \dott{3} \cost{2}{3} \\
+	U &= -(m_1 + m_2 + m_3) g l_1 \cos\theta_1 - (m_2 + m_3) g l_2 \cos\theta_2 - m_3 g l_3 \cos\theta_3
 }
 となる。
 これを見ると後のことを考えて$T,U$を変形しておいた方が良さそうに見える。
@@ -141,8 +170,8 @@ $n=3$のときに具体的に書き下してみると
 			M_i l_i^2 \dott{i}^2
 			+ \sum_{j=1}^{i-1} M_i l_i l_j \dott{i} \dott{j} \cost{i}{j}
 			+ \sum_{j=i+1}^n M_j l_i l_j \dott{i} \dott{j} \cost{i}{j}
-		\right) \\
-	U &= -\sum_{i=1}^n M_i g l_i \cos\theta_i
+		\right) \label{2D質点系運動エネルギー}\\
+	U &= -\sum_{i=1}^n M_i g l_i \cos\theta_i \label{質点系位置エネルギー}
 }
 となる。
 ハミルトニアン$H$は$H=T+U$で求まる。
@@ -214,7 +243,7 @@ $n=3$について具体的に書き下すと
 }
 である。
 ただし $\cost{d}{d} = 1$, $\sint{d}{d} = 0$ に注意。
-また$R_{i,j}$において$j\rightarrow j+1$とすると行列$R$の要素を1つ右に進むことに対応する（これいつまで経っても覚えられない）。
+\footnote{$R_{i,j}$において$j\rightarrow j+1$とすると行列$R$の要素を1つ右に進むことに対応する。これいつまで経っても覚えられない。}
 
 $n=3$のときに（対称性を意識しつつ）具体的に書き下して見ると
 \eqa{
@@ -292,6 +321,7 @@ $n$個の重りが直列に連結された多重振り子がある。
 }
 となるが、この先を人力で計算するのは無謀なのでプログラムで計算する。
 Pythonの記号計算ライブラリとして有名なsympyを用いて計算した。
+\footnote{この後に出てくる運動エネルギーの計算と同じ、具体的な$N$の場合に運動方程式を計算させ、その結果を眺めて一般系を類推している。}
 
 運動方程式は以下の形になる。
 \eqa{
@@ -344,12 +374,16 @@ $\dot{\phi_1}=0$では普通に2次元系の振り子になり、$\theta_1=0$だ
 運動エネルギーも重要なので求めたいが、sympyで一般項を求めるのは大変なので$v^2_i$の最初の3項を書き下し、ここから一般の表現を類推する。
 $i=1,2,3$の場合の$v^2_i$は
 \eqa{
-	v^2_1 &= l_0^2 \left(\dot{\phi_0}^2\sin^2{\theta_0} + \dot{\theta_0}^2\right) \\
+	v^2_1 &= l_0^2 \left(\dot{\phi_0}^2\sin^2{\theta_0} + \dot{\theta_0}^2\right)
+}
+\eqa{
 	v^2_2 &= l_0^2 \left(\dot{\phi_0}^2\sin^2{\theta_0} + \dot{\theta_0}^2\right) + l_1^2 \left(\dot{\phi_1}^2\sin^2{\theta_1} + \dot{\theta_1}^2\right) \notag\\
 		&+ 2 l_0 l_1 \dot{\theta_0} \dot{\theta_1} \left(\cos{\left (\phi_0 - \phi_1 \right )} \cos{\theta_0} \cos{\theta_1} + \sin{\theta_0} \sin{\theta_1} \right) \notag\\
 		&+ 2 l_0 l_1 \dot{\phi_0} \dot{\phi_1} \cos{\left (\phi_0 - \phi_1 \right )} \sin{\theta_0} \sin{\theta_1} \notag\\
 		&- 2 l_0 l_1 \dot{\phi_0} \dot{\theta_1} \sin{\left (\phi_0 - \phi_1 \right )} \sin{\theta_0} \cos{\theta_1} \notag\\
-		&+ 2 l_0 l_1 \dot{\theta_0} \dot{\phi_1} \sin{\left (\phi_0 - \phi_1 \right )} \cos{\theta_0} \sin{\theta_1} \\
+		&+ 2 l_0 l_1 \dot{\theta_0} \dot{\phi_1} \sin{\left (\phi_0 - \phi_1 \right )} \cos{\theta_0} \sin{\theta_1}
+}
+\eqa{
 	v^2_3 &= l_0^2 \left(\dot{\phi_0}^2\sin^2{\theta_0} + \dot{\theta_0}^2\right)
 		+ l_1^2 \left(\dot{\phi_1}^2 \sin^2{\theta_1} + \dot{\theta_1}^2 \right)
 		+ l_2^2 \left(\dot{\phi_2}^2 \sin^2{\theta_2} + \dot{\theta_2}^2\right) \notag\\
@@ -373,6 +407,19 @@ $i=1,2,3$の場合の$v^2_i$は
 		&+ \sum_{j=1}^i \sum_{\substack{k=1\\ k\ne j}}^i  l_j l_k \dot{\phi_j} \dot{\phi_k} \cos{\left (\phi_j - \phi_k \right )} \sin{\theta_j} \sin{\theta_k} \notag\\
 		&+ 2\sum_{j=1}^i \sum_{\substack{k=1\\ k\ne j}}^i  l_j l_k \dot{\theta_j} \dot{\phi_k} \sin{\left (\phi_j - \phi_k \right )} \cos{\theta_j} \sin{\theta_k}
 }
+となる。
+この形だと運動エネルギー$T$を求めるのは簡単で、例によって$M_i=\sum_{j=i}^N m_j$を用いると
+\eqa{
+	T &= \frac{1}{2} \sum_{i=1}^N m_i v^2_i \notag\\
+		&= \frac{1}{2} \sum_{i=1}^N l_i^2 M_i \left(\dot{\phi_i}^2\sin^2{\theta_i} + \dot{\theta_i}^2\right) \notag\\
+		&+ \sum_{i=1}^{N-1} \sum_{j=i+1}^N l_i l_j M_j \dot{\theta_i} \dot{\theta_j} \left(\cos{\left (\phi_i - \phi_j \right )} \cos{\theta_i} \cos{\theta_j} + \sin{\theta_i} \sin{\theta_j}\right) \notag\\
+		&+ \sum_{i=1}^{N-1} \sum_{j=i+1}^N  l_i l_j M_j \dot{\phi_i} \dot{\phi_j} \cos{\left (\phi_i - \phi_j \right)} \sin{\theta_i} \sin{\theta_j} \notag\\
+		&+ \sum_{i=1}^N \sum_{\substack{j=1\\ j\ne i}}^N  l_i l_j M_{\max{\paren{i, j}}} \dot{\theta_i} \dot{\phi_j} \sin{\left(\phi_i - \phi_j \right)} \cos{\theta_i} \sin{\theta_j}
+}
+となる。
+\footnote{1つ目の$\sum$は2つ目と3つ目に吸収させることもできるが、まあこのままの方が見やすいでしょう。}
+当たり前だが位置エネルギー$U$は2次元系の位置エネルギー\refeq{質点系位置エネルギー}と変わらない。
+
 
 \section{数値計算}
 
@@ -386,7 +433,7 @@ $i=1,2,3$の場合の$v^2_i$は
 
 \subsection{陰解法}
 
-\subsubsection{質点2重振り子}
+\subsection{質点2重振り子}
 
 $l = l_2 / l_1$、$m = m_2 / (m_1 + m_2)$、$g \rightarrow g / l_1 / (m_1 + m_2)$として無次元化する。
 （$g[s^{-2}]$の無次元化が不十分だが、時間の次元は適当に取ってくればいいだろう）
