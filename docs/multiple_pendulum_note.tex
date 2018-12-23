@@ -341,6 +341,39 @@ $N=1$の場合に具体的に書き下してみると
 となる。ただし$\cot x = 1 / \tan x$。
 $\dot{\phi_1}=0$では普通に2次元系の振り子になり、$\theta_1=0$だと$\phi_1$は不定になる様子も表されている。
 
+運動エネルギーも重要なので求めたいが、sympyで一般項を求めるのは大変なので$v^2_i$の最初の3項を書き下し、ここから一般の表現を類推する。
+$i=1,2,3$の場合の$v^2_i$は
+\eqa{
+	v^2_1 &= l_0^2 \left(\dot{\phi_0}^2\sin^2{\theta_0} + \dot{\theta_0}^2\right) \\
+	v^2_2 &= l_0^2 \left(\dot{\phi_0}^2\sin^2{\theta_0} + \dot{\theta_0}^2\right) + l_1^2 \left(\dot{\phi_1}^2\sin^2{\theta_1} + \dot{\theta_1}^2\right) \notag\\
+		&+ 2 l_0 l_1 \dot{\theta_0} \dot{\theta_1} \left(\cos{\left (\phi_0 - \phi_1 \right )} \cos{\theta_0} \cos{\theta_1} + \sin{\theta_0} \sin{\theta_1} \right) \notag\\
+		&+ 2 l_0 l_1 \dot{\phi_0} \dot{\phi_1} \cos{\left (\phi_0 - \phi_1 \right )} \sin{\theta_0} \sin{\theta_1} \notag\\
+		&- 2 l_0 l_1 \dot{\phi_0} \dot{\theta_1} \sin{\left (\phi_0 - \phi_1 \right )} \sin{\theta_0} \cos{\theta_1} \notag\\
+		&+ 2 l_0 l_1 \dot{\theta_0} \dot{\phi_1} \sin{\left (\phi_0 - \phi_1 \right )} \cos{\theta_0} \sin{\theta_1} \\
+	v^2_3 &= l_0^2 \left(\dot{\phi_0}^2\sin^2{\theta_0} + \dot{\theta_0}^2\right)
+		+ l_1^2 \left(\dot{\phi_1}^2 \sin^2{\theta_1} + \dot{\theta_1}^2 \right)
+		+ l_2^2 \left(\dot{\phi_2}^2 \sin^2{\theta_2} + \dot{\theta_2}^2\right) \notag\\
+		&+ 2 l_0 l_1 \dot{\theta_0} \dot{\theta_1} \left(\cos{\left (\phi_0 - \phi_1 \right )} \cos{\theta_0} \cos{\theta_1} + \sin{\theta_0} \sin{\theta_1}\right) \notag\\
+		&+ 2 l_0 l_2 \dot{\theta_0} \dot{\theta_2} \left(\cos{\left (\phi_0 - \phi_2 \right )} \cos{\theta_0} \cos{\theta_2} + \sin{\theta_0} \sin{\theta_2}\right) \notag\\
+		&+ 2 l_1 l_2 \dot{\theta_1} \dot{\theta_2} \left(\cos{\left (\phi_1 - \phi_2 \right )} \cos{\theta_1} \cos{\theta_2} + \sin{\theta_1} \sin{\theta_2}\right) \notag\\
+		&+ 2 l_0 l_1 \dot{\phi_0} \dot{\phi_1} \cos{\left (\phi_0 - \phi_1 \right )} \sin{\theta_0} \sin{\theta_1} \notag\\
+		&+ 2 l_0 l_2 \dot{\phi_0} \dot{\phi_2} \cos{\left (\phi_0 - \phi_2 \right )} \sin{\theta_0} \sin{\theta_2} \notag\\
+		&+ 2 l_1 l_2 \dot{\phi_1} \dot{\phi_2} \cos{\left (\phi_1 - \phi_2 \right )} \sin{\theta_1} \sin{\theta_2} \notag\\
+		&- 2 l_0 l_1 \dot{\phi_0} \dot{\theta_1} \sin{\left (\phi_0 - \phi_1 \right )} \sin{\theta_0} \cos{\theta_1} \notag\\
+		&+ 2 l_0 l_1 \dot{\theta_0} \dot{\phi_1}\sin{\left (\phi_0 - \phi_1 \right )} \sin{\theta_1} \cos{\theta_0} \notag\\
+		&- 2 l_0 l_2 \dot{\phi_0} \dot{\theta_2}\sin{\left (\phi_0 - \phi_2 \right )} \sin{\theta_0} \cos{\theta_2} \notag\\
+		&+ 2 l_0 l_2 \dot{\theta_0} \dot{\phi_2} \sin{\left (\phi_0 - \phi_2 \right )} \sin{\theta_2} \cos{\theta_0} \notag\\
+		&- 2 l_1 l_2 \dot{\phi_1} \dot{\theta_2} \sin{\left (\phi_1 - \phi_2 \right )} \sin{\theta_1} \cos{\theta_2}  \notag\\
+		&+ 2 l_1 l_2 \dot{\theta_1} \dot{\phi_2} \sin{\left (\phi_1 - \phi_2 \right )} \sin{\theta_2} \cos{\theta_1}
+}
+となる。ここから$v^2_i$を類推すると
+\eqa{
+	v^2_i &= \sum_{j=1}^i l_j^2 \left(\dot{\phi_j}^2\sin^2{\theta_j} + \dot{\theta_j}^2\right) \notag\\
+		&+ \sum_{j=1}^i \sum_{\substack{k=1\\ k\ne j}}^i l_j l_k \dot{\theta_j} \dot{\theta_k} \left(\cos{\left (\phi_j - \phi_k \right )} \cos{\theta_j} \cos{\theta_k} + \sin{\theta_j} \sin{\theta_k}\right) \notag\\
+		&+ \sum_{j=1}^i \sum_{\substack{k=1\\ k\ne j}}^i  l_j l_k \dot{\phi_j} \dot{\phi_k} \cos{\left (\phi_j - \phi_k \right )} \sin{\theta_j} \sin{\theta_k} \notag\\
+		&+ 2\sum_{j=1}^i \sum_{\substack{k=1\\ k\ne j}}^i  l_j l_k \dot{\theta_j} \dot{\phi_k} \sin{\left (\phi_j - \phi_k \right )} \cos{\theta_j} \sin{\theta_k}
+}
+
 \section{数値計算}
 
 \subsection{無次元化}
