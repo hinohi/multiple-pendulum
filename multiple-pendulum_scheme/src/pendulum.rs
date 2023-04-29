@@ -157,4 +157,43 @@ impl MultiUniformPendulum2D {
         self.x_mod_pi();
         Ok(())
     }
+
+    pub fn update_irk24(&mut self, dt: Float) -> Result<(), LinalgError> {
+        let a11 = 0.25 * dt;
+        let a12 = (0.25 - 3_f64.sqrt() / 6.0) * dt;
+        let a21 =(0.25 + 3_f64.sqrt() / 6.0) * dt;
+        let a22 = 0.25 * dt;
+        let b1 = 0.5 * dt;
+        let b2 = 0.5 * dt;
+
+        let mut v1 = self.v.clone();
+        let mut v2 = self.v.clone();
+        let mut f1 = self.calc_force(&self.x, &self.v)?;
+        let mut f2 = f1.clone();
+        for _ in 0..100 {
+            let mut x1 = self.x.clone();
+            x1.zip_mut_with(&v1, |x, v| *x += v * a11);
+            x1.zip_mut_with(&v2, |x, v| *x += v * a12);
+            let mut x2 = self.x.clone();
+            x2.zip_mut_with(&v1, |x, v| *x += v * a21);
+            x2.zip_mut_with(&v2, |x, v| *x += v * a22);
+
+            v1 = self.v.clone();
+            v1.zip_mut_with(&f1, |v, f| *v += f * a11);
+            v1.zip_mut_with(&f2, |v, f| *v += f * a12);
+            v2 = self.v.clone();
+            v2.zip_mut_with(&f1, |v, f| *v += f * a21);
+            v2.zip_mut_with(&f2, |v, f| *v += f * a22);
+
+            f1 = self.calc_force(&x1, &v1)?;
+            f2 = self.calc_force(&x2, &v2)?;
+        }
+        self.x.zip_mut_with(&v1, |x, v| *x += v * b1);
+        self.x.zip_mut_with(&v2, |x, v| *x += v * b2);
+        self.v.zip_mut_with(&f1, |v, f| *v += f * b1);
+        self.v.zip_mut_with(&f2, |v, f| *v += f * b2);
+        self.t += dt;
+        self.x_mod_pi();
+        Ok(())
+    }
 }
